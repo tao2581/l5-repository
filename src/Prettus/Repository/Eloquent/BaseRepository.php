@@ -1084,7 +1084,7 @@ abstract class BaseRepository implements RepositoryInterface, RepositoryCriteria
     }
 
     /**
-     * 排序
+     * 排序条件
      * @param        $field
      * @param string $direction
      * @return \Prettus\Repository\Eloquent\BaseRepository
