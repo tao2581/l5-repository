@@ -81,7 +81,13 @@ abstract class BaseRepository implements RepositoryInterface, RepositoryCriteria
      * @var \Closure
      */
     protected $scopeQuery = null;
-
+    /**
+     * 多条件时
+     * @array \Closure
+     * By tao2581 2016/02/13
+     */
+    protected $scopeQuerys = [];
+    
     /**
      * @param Application $app
      */
@@ -109,6 +115,9 @@ abstract class BaseRepository implements RepositoryInterface, RepositoryCriteria
     public function resetModel()
     {
         $this->makeModel();
+        // 重置模型时 重新执行子类的boot方法 初始化设置
+        // edit by tao2581 20160603
+        $this->boot();
     }
 
     /**
@@ -249,6 +258,17 @@ abstract class BaseRepository implements RepositoryInterface, RepositoryCriteria
     {
         $this->scopeQuery = $scope;
 
+        return $this;
+    }
+    
+    /**
+     * Query Scope  tao2581 2016-06-02
+     *
+     * @param \Closure $scope
+     * @return $this
+     */
+    public function scopeQuerys(\Closure $scope){
+        array_push($this->scopeQuerys, $scope);
         return $this;
     }
 
@@ -895,6 +915,28 @@ abstract class BaseRepository implements RepositoryInterface, RepositoryCriteria
 
         return $this;
     }
+    
+    /**
+     * 多条件版本Apply scope in current Querys
+     * By tao2581 2016/02/13
+     * @return $this
+     */
+    protected function applyScopes()
+    {
+        if ( !empty($this->scopeQuerys) )
+        {
+            foreach($this->scopeQuerys as $scopeQuery)
+            {
+                if ( is_callable($scopeQuery) )
+                {
+                    $callback = $scopeQuery;
+                    $this->model = $callback($this->model);
+                }
+            }
+        }
+
+        return  $this;
+    }
 
     /**
      * Apply criteria in current Query
@@ -977,10 +1019,87 @@ abstract class BaseRepository implements RepositoryInterface, RepositoryCriteria
             }
 
             if (!$this->skipPresenter) {
-                return $this->presenter->present($result);
+                 $result = $this->presenter->present($result);
+                // 如果查询结果包括 [data] 则过滤  Edit by taod2581 16.03.12
+                if (array_key_exists('data', $result) && is_array($result['data'])) {
+                    $result = $result['data'];
+                }
+                return $result;                
             }
         }
 
         return $result;
+    }
+    
+    
+    /**
+     * 查询数量
+     * By tao2581@126.com 2016/02/13
+     * @return mixed
+     */
+    public function count()
+    {
+        $this->applyCriteria();
+        $this->applyScope();
+        $model = $this->model->count();
+        $this->resetModel();
+        return $model;
+        // transform报错 取消
+        // return $this->parserResult($model);
+    }
+
+    /**
+     * 查询结果
+     * By tao2581@126.com 2016/02/13
+     * @param array $columns
+     * @return mixed
+     */
+    public function get($columns = array('*'))
+    {
+        $this->applyCriteria();
+        $this->applyScope();
+        $model = $this->model->get($columns);
+        $this->resetModel();
+        return $this->parserResult($model);
+    }
+
+    /**
+     * 生成缓存结果唯一key
+     * 唯一条件:绑定查询变量、sql、transformer
+     *
+     * @param array $columns
+     * @return array
+     */
+    public function getUniqueKey($columns = array('*'))
+    {
+        $this->applyCriteria();
+        $this->applyScope();
+        $uniqueKey = [$this->model->getBindings(), $this->model->toSql(), $columns];
+        $this->resetModel();
+        // 那么返回对应transformer来指定结果 那么返回对应transformer来指定结果
+        //if($this->presenter instanceof \Prettus\Repository\Presenter\ModelFractalPresenter)
+        return $uniqueKey;
+    }
+    /**
+     * 返回模型
+     * By tao2581@126.com 2016/02/20
+     * @return Model
+     */
+    public function getModel()
+    {
+        return $this->model;
+    }
+
+    /**
+     * 排序
+     * @param        $field
+     * @param string $direction
+     * @return \Prettus\Repository\Eloquent\BaseRepository
+     */
+    public function orderBy($field, $direction = 'asc')
+    {
+        return $this->scopeQuerys(function($query) use($field, $direction){
+            return $query->orderBy($field, $direction);
+        });
     }
 }
