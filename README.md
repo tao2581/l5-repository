@@ -756,7 +756,11 @@ class PostRepository extends BaseRepository implements CacheableInterface {
 
     ...
 }
-```
+```  
+
+*Clear cache in Other Repository*  
+method: clearCache()  
+> app(\App\Contracts\Repositories\Student\StudentRepository::class)->clearCache();  
 
 Done , done that your repository will be cached , and the repository cache is cleared whenever an item is created, modified or deleted.
 
