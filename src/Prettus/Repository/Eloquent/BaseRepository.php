@@ -1095,4 +1095,11 @@ abstract class BaseRepository implements RepositoryInterface, RepositoryCriteria
             return $query->orderBy($field, $direction);
         });
     }
+    
+    // 清除缓存
+    //  app(\App\Contracts\Repositories\Student\StudentRepository::class)->clearCache();
+    public function clearCache()
+    {
+        event(new RepositoryEntityCreated($this, $this->model));
+    }
 }
