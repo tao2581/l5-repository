@@ -905,7 +905,7 @@ abstract class BaseRepository implements RepositoryInterface, RepositoryCriteria
             $callback = $this->scopeQuery;
             $this->model = $callback($this->model);
         }
-
+        $this->applyScopes();
         return $this;
     }
     
