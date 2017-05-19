@@ -596,7 +596,14 @@ abstract class BaseRepository implements RepositoryInterface, RepositoryCriteria
             // we should pass data that has been casts by the model
             // to make sure data type are same because validator may need to use
             // this data to compare with data that fetch from database.
-            $attributes = $this->model->newInstance()->forceFill($attributes)->toArray();
+            
+            // fix: scopeQuery 回调后，$this->model 变为 Builder 对象，无法使用 newInstance()
+            if ($this->model instanceof Builder) {
+                $model = $this->app->make($this->model());
+            } else {
+                $model = $this->model;
+            }
+            $attributes = $model->newInstance()->forceFill($attributes)->toArray();
 
             $this->validator->with($attributes)->setId($id)->passesOrFail(ValidatorInterface::RULE_UPDATE);
         }
