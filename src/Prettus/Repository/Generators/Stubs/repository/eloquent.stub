@@ -7,13 +7,16 @@ use Prettus\Repository\Criteria\RequestCriteria;
 use $REPOSITORY$
 use $MODEL$;
 $USE_VALIDATOR$
+use Prettus\Repository\Contracts\CacheableInterface;
+use Prettus\Repository\Traits\CacheableRepository;
 
 /**
  * Class $CLASS$RepositoryEloquent
  * @package $NAMESPACE$
  */
-class $CLASS$RepositoryEloquent extends BaseRepository implements $CLASS$Repository
+class $CLASS$RepositoryEloquent extends BaseRepository implements $CLASS$Repository ,CacheableInterface
 {
+    use CacheableRepository;
     /**
      * Specify Model class name
      *
