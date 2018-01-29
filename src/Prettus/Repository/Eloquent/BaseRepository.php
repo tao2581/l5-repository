@@ -1109,4 +1109,18 @@ abstract class BaseRepository implements RepositoryInterface, RepositoryCriteria
     {
         event(new RepositoryEntityCreated($this, $this->model));
     }
+    
+    /**
+     * 查询汇总
+     *
+     * By tao2581@126.com 2018/01/29
+     * @param string $field
+     * @return mixed
+     */
+    public function sum($field)
+    {
+        $this->applyCriteria();
+        $this->applyScope();
+        $model = $this->model->sum($field);
+      
 }
